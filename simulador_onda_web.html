@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Computacional de la Ecuación de Onda 1D | Física III UTP</title>
+  <style>
+    :root {
+      --bg-main: #060709;
+      --bg-card: rgba(18, 20, 29, 0.75);
+      --bg-card-hover: rgba(28, 32, 48, 0.85);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(66, 133, 244, 0.4);
+      --accent-blue: #1a73e8;
+      --accent-cyan: #38bdf8;
+      --accent-red: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-emerald: #10b981;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+      --radius-pill: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Google Sans", Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(26, 115, 232, 0.15), transparent 45%),
+        radial-gradient(circle at 90% 20%, rgba(168, 85, 247, 0.08), transparent 35%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER TIPO GEMINI */
+    header {
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(6, 7, 9, 0.85);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      fill: none;
+    }
+
+    .brand-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand-badge {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.65rem;
+      background: rgba(66, 133, 244, 0.15);
+      border: 1px solid rgba(66, 133, 244, 0.35);
+      color: var(--accent-cyan);
+      border-radius: var(--radius-pill);
+      font-weight: 500;
+    }
+
+    .header-info {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* MAIN CONTAINER */
+    main {
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    /* HERO TITLE SECTION */
+    .hero {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 750px;
+      margin: 0 auto;
+    }
+
+    /* SELECTOR DE ESCENARIOS (PILLS TIPO GEMINI) */
+    .scenario-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .scenario-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .scenario-pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .scenario-pill.active {
+      background: rgba(26, 115, 232, 0.2);
+      border-color: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 0 16px rgba(26, 115, 232, 0.3);
+    }
+
+    /* DASHBOARD LAYOUT */
+    .grid-dashboard {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* CARD CONTENEDORA */
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* VISOR CANVAS */
+    .canvas-container {
+      position: relative;
+      background: #090b10;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 380px;
+    }
+
+    /* TELEMETRÍA EN TIEMPO REAL (CHIPS SUPERIORES) */
+    .telemetry-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .stat-badge {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-md);
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-feature-settings: "tnum";
+    }
+
+    .stat-value.ok {
+      color: var(--accent-emerald);
+    }
+
+    .stat-value.warn {
+      color: var(--accent-amber);
+    }
+
+    .stat-value.error {
+      color: var(--accent-red);
+    }
+
+    /* CONTROLES DE REPRODUCCIÓN */
+    .playback-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .button-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: #1557b0;
+      box-shadow: 0 0 16px rgba(26, 115, 232, 0.4);
+    }
+
+    .btn-icon-only {
+      padding: 0.55rem;
+      border-radius: var(--radius-pill);
+    }
+
+    .icon-svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+    }
+
+    .toggle-label input[type="checkbox"] {
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    /* PANEL LATERAL DE CONFIGURACIÓN */
+    .sidebar-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebar-desc {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.25rem;
+      line-height: 1.4;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .form-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .form-val-display {
+      font-weight: 600;
+      color: var(--accent-cyan);
+      font-feature-settings: "tnum";
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-pill);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(26, 115, 232, 0.6);
+      transition: transform 0.1s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 0.55rem 0.75rem;
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    select option {
+      background: #12141d;
+      color: var(--text-primary);
+    }
+
+    /* BANNER DE ALERTA CFL */
+    .cfl-banner {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      line-height: 1.4;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .cfl-banner.active {
+      display: block;
+    }
+
+    .cfl-banner.ok {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #a7f3d0;
+    }
+
+    .cfl-banner.danger {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fecdd3;
+    }
+
+    /* LEYENDA TÉCNICA */
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-top: 0.5rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    .line-fdtd {
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+    }
+
+    .line-analitica {
+      background: var(--accent-red);
+      height: 2px;
+      border-top: 2px dashed var(--accent-red);
+      background: transparent;
+    }
+
+    /* FOOTER */
+    footer {
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-subtle);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO SUPERIOR TIPO GEMINI -->
+  <header>
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24">
+        <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6L12 2Z" fill="url(#gemini-grad)"/>
+        <defs>
+          <linearGradient id="gemini-grad" x1="2" y1="2" x2="22" y2="22">
+            <stop offset="0%" stop-color="#4285F4"/>
+            <stop offset="50%" stop-color="#9B72CB"/>
+            <stop offset="100%" stop-color="#D96570"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-title">Simulador FDTD 1D</span>
+      <span class="brand-badge">Física III — UTP</span>
+    </div>
+    <div class="header-info">
+      Proyecto Integrador 10 — Grupo 10
+    </div>
+  </header>
+
+  <main>
+    <!-- TITULAR PRINCIPAL -->
+    <section class="hero">
+      <h1 class="hero-h1">Evolución Espaciotemporal de Ondas</h1>
+      <p class="hero-subtitle">
+        Simulación interactiva basada en el método de diferencias finitas en el dominio del tiempo (FDTD) de segundo orden con validación analítica exacta de d'Alembert.
+      </p>
+    </section>
+
+    <!-- NAVEGACIÓN POR ESCENARIOS OBLIGATORIOS Y PERSONALIZADO -->
+    <nav class="scenario-nav">
+      <button class="scenario-pill active" data-scenario="1">
+        <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/></svg>
+        Caso 1: Extremos Fijos (Inversión π)
+      </button>
+      <button class="scenario-pill" data-scenario="2">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 12h14m-4-4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Caso 2: Extremo Libre (Sin Inversión)
+      </button>
+      <button class="scenario-pill" data-scenario="3">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Caso 3: Sensibilidad CFL (Courant)
+      </button>
+      <button class="scenario-pill" data-scenario="custom">
+        <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        Caso 4: Modo Personalizado
+      </button>
+    </nav>
+
+    <!-- GRID PRINCIPAL DE VISUALIZACIÓN Y CONFIGURACIÓN -->
+    <div class="grid-dashboard">
+      
+      <!-- COLUMNA IZQUIERDA: CANVAS Y TELEMETRÍA -->
+      <div class="glass-card">
+        
+        <!-- TELEMETRÍA EN VIVO -->
+        <div class="telemetry-row">
+          <div class="stat-badge">
+            <span class="stat-label">Rapidez Teórica v</span>
+            <span class="stat-value" id="val-v">141.42 m/s</span>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-label">Factor Courant C</span>
+            <span class="stat-value ok" id="val-c">1.00</span>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-label">Tiempo t</span>
+            <span class="stat-value" id="val-t">0.00 ms</span>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-label">Error RMSE</span>
+            <span class="stat-value ok" id="val-rmse">0.000 mm</span>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-label">Amplitud Máx</span>
+            <span class="stat-value" id="val-ymax">20.00 mm</span>
+          </div>
+        </div>
+
+        <!-- VISOR GRÁFICO (CANVAS) -->
+        <div class="canvas-container">
+          <canvas id="waveCanvas" width="900" height="380"></canvas>
+        </div>
+
+        <!-- LEYENDA DE COLORES -->
+        <div class="legend-row">
+          <div class="legend-item">
+            <span class="legend-line line-fdtd"></span>
+            <span>Simulación FDTD Numérica</span>
+          </div>
+          <div class="legend-item" id="legend-analitica-box">
+            <span class="legend-line line-analitica"></span>
+            <span>Solución Analítica d'Alembert (Teórica)</span>
+          </div>
+        </div>
+
+        <!-- BARRA DE CONTROLES INFERIOR -->
+        <div class="playback-toolbar">
+          <div class="button-group">
+            <button class="btn btn-primary" id="btn-play">
+              <svg class="icon-svg" id="icon-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span id="label-play">Pausar</span>
+            </button>
+            <button class="btn btn-icon-only" id="btn-step" title="Avanzar un paso temporal">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+            </button>
+            <button class="btn btn-icon-only" id="btn-reset" title="Reiniciar perturbación">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            </button>
+          </div>
+
+          <div class="toggle-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="chk-analitica" checked>
+              <span>Validación d'Alembert</span>
+            </label>
+            <label class="toggle-label">
+              <input type="checkbox" id="chk-grid" checked>
+              <span>Malla de fondo</span>
+            </label>
+            <label class="toggle-label">
+              <span>Velocidad:</span>
+              <select id="sel-speed" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                <option value="0.25">0.25x (Lento)</option>
+                <option value="0.5">0.5x</option>
+                <option value="1" selected>1.0x (Normal)</option>
+                <option value="2">2.0x (Rápido)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA: PANEL DE CONTROL DE PARÁMETROS -->
+      <div class="glass-card">
+        <h3 class="sidebar-title" id="panel-title">Parámetros del Escenario</h3>
+        <p class="sidebar-desc" id="panel-desc">
+          Extremos rígidamente fijos a la pared (Dirichlet: y=0). La onda sufre una inversión de fase de 180° (π rad) en cada reflexión.
+        </p>
+
+        <!-- FORMULARIO DE CONTROLES -->
+        <div id="controls-container">
+          
+          <div class="form-group">
+            <div class="form-label-row">
+              <span>Tensión Mecánica T</span>
+              <span class="form-val-display" id="disp-T">40.0 N</span>
+            </div>
+            <input type="range" id="rng-T" min="5" max="150" step="1" value="40">
+          </div>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <span>Densidad Lineal μ</span>
+              <span class="form-val-display" id="disp-mu">2.0 g/m</span>
+            </div>
+            <input type="range" id="rng-mu" min="0.5" max="10.0" step="0.1" value="2.0">
+          </div>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <span>Número de Courant C</span>
+              <span class="form-val-display" id="disp-C">1.00</span>
+            </div>
+            <input type="range" id="rng-C" min="0.2" max="1.15" step="0.01" value="1.00">
+          </div>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <span>Tipo de Perturbación</span>
+            </div>
+            <select id="sel-pulso">
+              <option value="gaussiano" selected>Pulso Gaussiano Suave</option>
+              <option value="triangular">Pulso Triangular (Cuerda Pulsada)</option>
+              <option value="armonico">Paquete Armónico Senoidal</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <span>Amplitud Inicial A</span>
+              <span class="form-val-display" id="disp-A">20 mm</span>
+            </div>
+            <input type="range" id="rng-A" min="5" max="35" step="1" value="20">
+          </div>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <span>Extremo Izquierdo (x = 0)</span>
+            </div>
+            <select id="sel-bc-left">
+              <option value="fijo" selected>Fijo (y = 0)</option>
+              <option value="libre">Libre (dy/dx = 0)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <span>Extremo Derecho (x = L)</span>
+            </div>
+            <select id="sel-bc-right">
+              <option value="fijo" selected>Fijo (y = 0)</option>
+              <option value="libre">Libre (dy/dx = 0)</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- BANNER DE AVISO DE ESTABILIDAD CFL -->
+        <div class="cfl-banner ok active" id="cfl-alert">
+          <strong>Criterio CFL Satisfecho (C ≤ 1.0):</strong> El algoritmo numérico es incondicionalmente estable.
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    Física III — Universidad Tecnológica de Pereira | Departamento de Matemáticas | Examen Parcial 2 — Proyecto 10
+  </footer>
+
+  <script>
+    // =========================================================================
+    // ESTADO DEL SISTEMA Y MOTOR FÍSICO FDTD
+    // =========================================================================
+
+    const state = {
+      // Propiedades físicas
+      L: 1.0,           // Longitud [m]
+      T: 40.0,          // Tensión [N]
+      mu: 0.002,        // Densidad lineal [kg/m]
+      v: 141.421,       // Rapidez [m/s]
+      
+      // Malla espacial y temporal
+      Nx: 201,          // Puntos espaciales
+      dx: 0.005,        // Paso espacial [m]
+      C: 1.0,           // Número de Courant
+      dt: 0.000035355,  // Paso temporal [s]
+      
+      // Condiciones iniciales
+      pulsoTipo: 'gaussiano',
+      A: 0.02,          // Amplitud [m]
+      x0: 0.3,          // Centro [m]
+      sigma: 0.05,      // Ancho [m]
+      
+      // Condiciones de frontera
+      bcLeft: 'fijo',
+      bcRight: 'fijo',
+      
+      // Vectores de estado FDTD: y_ant (n-1), y_act (n), y_sig (n+1)
+      y_ant: null,
+      y_act: null,
+      y_sig: null,
+      x: null,
+      
+      // Estado de ejecución
+      tiempoActual: 0.0, // segundos
+      pasoActual: 0,
+      corriendo: true,
+      velocidadSim: 1.0,
+      mostrarAnalitica: true,
+      mostrarGrid: true,
+      escenarioActual: '1'
+    };
+
+    // Referencias al DOM
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const valV = document.getElementById('val-v');
+    const valC = document.getElementById('val-c');
+    const valT = document.getElementById('val-t');
+    const valRmse = document.getElementById('val-rmse');
+    const valYmax = document.getElementById('val-ymax');
+
+    const btnPlay = document.getElementById('btn-play');
+    const labelPlay = document.getElementById('label-play');
+    const iconPlay = document.getElementById('icon-play');
+    const btnStep = document.getElementById('btn-step');
+    const btnReset = document.getElementById('btn-reset');
+
+    const chkAnalitica = document.getElementById('chk-analitica');
+    const chkGrid = document.getElementById('chk-grid');
+    const selSpeed = document.getElementById('sel-speed');
+
+    const rngT = document.getElementById('rng-T');
+    const rngMu = document.getElementById('rng-mu');
+    const rngC = document.getElementById('rng-C');
+    const rngA = document.getElementById('rng-A');
+    const selPulso = document.getElementById('sel-pulso');
+    const selBcLeft = document.getElementById('sel-bc-left');
+    const selBcRight = document.getElementById('sel-bc-right');
+
+    const dispT = document.getElementById('disp-T');
+    const dispMu = document.getElementById('disp-mu');
+    const dispC = document.getElementById('disp-C');
+    const dispA = document.getElementById('disp-A');
+    const cflAlert = document.getElementById('cfl-alert');
+
+    const panelTitle = document.getElementById('panel-title');
+    const panelDesc = document.getElementById('panel-desc');
+
+    // =========================================================================
+    // INICIALIZACIÓN DE LA MALLA Y CONDICIÓN INICIAL
+    // =========================================================================
+
+    function inicializarMalla() {
+      state.dx = state.L / (state.Nx - 1);
+      state.v = Math.sqrt(state.T / state.mu);
+      state.dt = (state.C * state.dx) / state.v;
+
+      state.x = new Float64Array(state.Nx);
+      state.y_ant = new Float64Array(state.Nx);
+      state.y_act = new Float64Array(state.Nx);
+      state.y_sig = new Float64Array(state.Nx);
+
+      for (let i = 0; i < state.Nx; i++) {
+        state.x[i] = i * state.dx;
+      }
+
+      // Evaluar perfil inicial en t = 0
+      for (let i = 0; i < state.Nx; i++) {
+        const xi = state.x[i];
+        let yi = 0.0;
+
+        if (state.pulsoTipo === 'gaussiano') {
+          yi = state.A * Math.exp(-Math.pow(xi - state.x0, 2) / (2.0 * Math.pow(state.sigma, 2)));
+        } else if (state.pulsoTipo === 'triangular') {
+          if (xi <= state.x0) {
+            yi = state.A * (xi / state.x0);
+          } else {
+            yi = state.A * ((state.L - xi) / (state.L - state.x0));
+          }
+        } else if (state.pulsoTipo === 'armonico') {
+          const k = 4.0 * Math.PI / state.L;
+          yi = state.A * Math.sin(k * xi) * Math.exp(-Math.pow(xi - state.x0, 2) / (2.0 * Math.pow(state.sigma * 2, 2)));
+        }
+
+        state.y_act[i] = yi;
+      }
+
+      // Aplicar condiciones de frontera al paso inicial
+      aplicarFronteras(state.y_act);
+
+      // Paso temporal inicial n = 1 (arranque con velocidad cero)
+      const C2 = state.C * state.C;
+      for (let i = 1; i < state.Nx - 1; i++) {
+        state.y_sig[i] = (1.0 - C2) * state.y_act[i] + 0.5 * C2 * (state.y_act[i + 1] + state.y_act[i - 1]);
+      }
+      aplicarFronteras(state.y_sig);
+
+      // Guardar copia del primer paso en y_ant para avanzar ordenadamente
+      state.y_ant.set(state.y_act);
+      state.y_act.set(state.y_sig);
+
+      state.tiempoActual = state.dt;
+      state.pasoActual = 1;
+
+      actualizarTelemetria();
+    }
+
+    function aplicarFronteras(vec) {
+      if (state.bcLeft === 'fijo') {
+        vec[0] = 0.0;
+      } else {
+        vec[0] = vec[1];
+      }
+
+      if (state.bcRight === 'fijo') {
+        vec[state.Nx - 1] = 0.0;
+      } else {
+        vec[state.Nx - 1] = vec[state.Nx - 2];
+      }
+    }
+
+    // =========================================================================
+    // PASO DE AVANCE TEMPORAL FDTD
+    // =========================================================================
+
+    function avanzarPasoFDTD() {
+      const C2 = state.C * state.C;
+      const Nx = state.Nx;
+      const act = state.y_act;
+      const ant = state.y_ant;
+      const sig = state.y_sig;
+
+      // Esquema centrado estándar: y[i, n+1] = 2(1-C²)y[i,n] - y[i,n-1] + C²(y[i+1,n] + y[i-1,n])
+      for (let i = 1; i < Nx - 1; i++) {
+        sig[i] = 2.0 * (1.0 - C2) * act[i] - ant[i] + C2 * (act[i + 1] + act[i - 1]);
+      }
+
+      aplicarFronteras(sig);
+
+      // Rotación de arreglos en memoria (sin nuevas reservas)
+      ant.set(act);
+      act.set(sig);
+
+      state.tiempoActual += state.dt;
+      state.pasoActual++;
+    }
+
+    // =========================================================================
+    // SOLUCIÓN ANALÍTICA DE D'ALEMBERT PARA VALIDACIÓN
+    // =========================================================================
+
+    function calcularAnalitica(xi, t) {
+      if (state.bcLeft !== 'fijo' || state.bcRight !== 'fijo' || state.pulsoTipo !== 'gaussiano') {
+        return null;
+      }
+
+      const v = state.v;
+      const L = state.L;
+      const x0 = state.x0;
+      const sig = state.sigma;
+      const A = state.A;
+
+      function f(pos) {
+        return A * Math.exp(-Math.pow(pos - x0, 2) / (2.0 * Math.pow(sig, 2)));
+      }
+
+      let y_exact = 0.0;
+      for (let k = -3; k <= 3; k++) {
+        const desp = 2.0 * k * L;
+        y_exact += 0.5 * f(xi - v * t - desp);
+        y_exact -= 0.5 * f(-xi - v * t - desp);
+        y_exact += 0.5 * f(xi + v * t - desp);
+        y_exact -= 0.5 * f(-xi + v * t - desp);
+      }
+      return y_exact;
+    }
+
+    // =========================================================================
+    // DIBUJO EN CANVAS Y TELEMETRÍA
+    // =========================================================================
+
+    function dibujar() {
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const paddingX = 50;
+      const paddingY = 40;
+      const plotW = w - 2 * paddingX;
+      const plotH = h - 2 * paddingY;
+      const midY = paddingY + plotH / 2;
+
+      // Escala vertical: ±35 mm mapeados a la altura
+      const maxDisplMm = 35.0;
+      const scaleY = (plotH / 2) / (maxDisplMm * 1e-3);
+
+      // 1. MALLA DE FONDO
+      if (state.mostrarGrid) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+        ctx.lineWidth = 1;
+
+        // Líneas horizontales de desplazamiento
+        for (let mm = -30; mm <= 30; mm += 10) {
+          const yPos = midY - mm * 1e-3 * scaleY;
+          ctx.beginPath();
+          ctx.moveTo(paddingX, yPos);
+          ctx.lineTo(paddingX + plotW, yPos);
+          ctx.stroke();
+
+          ctx.fillStyle = "rgba(148, 163, 184, 0.4)";
+          ctx.font = "10px sans-serif";
+          ctx.fillText(`${mm} mm`, 10, yPos + 3);
+        }
+
+        // Líneas verticales de posición x
+        for (let m = 0; m <= state.L; m += 0.2) {
+          const xPos = paddingX + (m / state.L) * plotW;
+          ctx.beginPath();
+          ctx.moveTo(xPos, paddingY);
+          ctx.lineTo(xPos, paddingY + plotH);
+          ctx.stroke();
+
+          ctx.fillStyle = "rgba(148, 163, 184, 0.4)";
+          ctx.font = "10px sans-serif";
+          ctx.fillText(`${m.toFixed(1)} m`, xPos - 12, h - 15);
+        }
+      }
+
+      // 2. EJE CENTRAL (CUERDA EN EQUILIBRIO y = 0)
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(paddingX, midY);
+      ctx.lineTo(paddingX + plotW, midY);
+      ctx.stroke();
+
+      // 3. CURVA ANALÍTICA DE D'ALEMBERT (LÍNEA DISCONTINUA ROJA/CORAL)
+      let sumErrCuad = 0.0;
+      let tieneAnalitica = false;
+
+      if (state.mostrarAnalitica && state.bcLeft === 'fijo' && state.bcRight === 'fijo' && state.pulsoTipo === 'gaussiano') {
+        tieneAnalitica = true;
+        ctx.strokeStyle = "rgba(244, 63, 94, 0.85)";
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+
+        for (let i = 0; i < state.Nx; i++) {
+          const xi = state.x[i];
+          const ya = calcularAnalitica(xi, state.tiempoActual);
+          const px = paddingX + (xi / state.L) * plotW;
+          const py = midY - ya * scaleY;
+
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+
+          const diff = state.y_act[i] - ya;
+          sumErrCuad += diff * diff;
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 4. CURVA FDTD NUMÉRICA (LÍNEA AZUL/CYAN CON BRILLO)
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 3.0;
+      ctx.shadowColor = "rgba(56, 189, 248, 0.6)";
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+
+      let maxYVal = 0.0;
+      for (let i = 0; i < state.Nx; i++) {
+        const xi = state.x[i];
+        const yi = state.y_act[i];
+        const px = paddingX + (xi / state.L) * plotW;
+        const py = midY - yi * scaleY;
+
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+
+        if (Math.abs(yi) > maxYVal) maxYVal = Math.abs(yi);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0; // Restaurar sombra
+
+      // 5. MARCADORES DE FRONTERA EN LOS EXTREMOS
+      ctx.fillStyle = state.bcLeft === 'fijo' ? "#f43f5e" : "#10b981";
+      ctx.beginPath();
+      ctx.arc(paddingX, midY - state.y_act[0] * scaleY, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = state.bcRight === 'fijo' ? "#f43f5e" : "#10b981";
+      ctx.beginPath();
+      ctx.arc(paddingX + plotW, midY - state.y_act[state.Nx - 1] * scaleY, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. ACTUALIZACIÓN DE TELEMETRÍA
+      if (tieneAnalitica) {
+        const rmseMm = Math.sqrt(sumErrCuad / state.Nx) * 1e3;
+        valRmse.textContent = rmseMm < 0.001 ? `${rmseMm.toExponential(2)} mm` : `${rmseMm.toFixed(3)} mm`;
+      } else {
+        valRmse.textContent = "N/A";
+      }
+
+      valYmax.textContent = `${(maxYVal * 1e3).toFixed(2)} mm`;
+      valT.textContent = `${(state.tiempoActual * 1e3).toFixed(2)} ms`;
+    }
+
+    function actualizarTelemetria() {
+      valV.textContent = `${state.v.toFixed(2)} m/s`;
+      valC.textContent = state.C.toFixed(2);
+
+      if (state.C > 1.0) {
+        valC.className = "stat-value error";
+        cflAlert.className = "cfl-banner danger active";
+        cflAlert.innerHTML = "<strong>Alerta de Inestabilidad (C > 1.0):</strong> La condición Courant-Friedrichs-Lewy se ha superado. La onda divergerá numéricamente.";
+      } else if (state.C === 1.0) {
+        valC.className = "stat-value ok";
+        cflAlert.className = "cfl-banner ok active";
+        cflAlert.innerHTML = "<strong>Criterio CFL Óptimo (C = 1.00):</strong> Propagación numérica exacta libre de dispersión artificial.";
+      } else {
+        valC.className = "stat-value warn";
+        cflAlert.className = "cfl-banner ok active";
+        cflAlert.innerHTML = "<strong>Modo Sub-CFL Estable (C < 1.00):</strong> Estable, con leve dispersión numérica visible en alta frecuencia.";
+      }
+    }
+
+    // =========================================================================
+    // BUCLE DE ANIMACIÓN
+    // =========================================================================
+
+    let lastTimestamp = 0;
+    function animLoop(timestamp) {
+      if (state.corriendo) {
+        // Ejecutar pasos computacionales por cuadro para que la onda se mueva a velocidad apreciable
+        const pasosPorFrame = Math.max(1, Math.round(4 * state.velocidadSim));
+        for (let p = 0; p < pasosPorFrame; p++) {
+          avanzarPasoFDTD();
+        }
+      }
+      dibujar();
+      requestAnimationFrame(animLoop);
+    }
+
+    // =========================================================================
+    // GESTIÓN DE ESCENARIOS
+    // =========================================================================
+
+    function cargarEscenario(esc) {
+      state.escenarioActual = esc;
+
+      // Actualizar botones de escenario
+      document.querySelectorAll('.scenario-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.scenario === esc);
+      });
+
+      if (esc === '1') {
+        panelTitle.textContent = "Caso 1: Extremos Fijos (Dirichlet)";
+        panelDesc.textContent = "Ambos extremos permanecen sujetos rígidamente (y=0). La onda se divide en dos pulsos opuestos y, al chocar contra las paredes, sufre una inversión de fase de 180° (π rad).";
+        state.T = 40.0;
+        state.mu = 0.002;
+        state.C = 1.0;
+        state.A = 0.02;
+        state.x0 = 0.3;
+        state.sigma = 0.05;
+        state.pulsoTipo = 'gaussiano';
+        state.bcLeft = 'fijo';
+        state.bcRight = 'fijo';
+        document.getElementById('legend-analitica-box').style.display = 'flex';
+      } else if (esc === '2') {
+        panelTitle.textContent = "Caso 2: Extremo Derecho Libre (Neumann)";
+        panelDesc.textContent = "El extremo izquierdo está fijo a la pared, pero el extremo derecho es un anillo libre sin rozamiento (dy/dx=0). Al chocar con el extremo libre, la onda se refleja constructivamente SIN inversión de fase.";
+        state.T = 40.0;
+        state.mu = 0.002;
+        state.C = 1.0;
+        state.A = 0.02;
+        state.x0 = 0.3;
+        state.sigma = 0.05;
+        state.pulsoTipo = 'gaussiano';
+        state.bcLeft = 'fijo';
+        state.bcRight = 'libre';
+        document.getElementById('legend-analitica-box').style.display = 'none';
+      } else if (esc === '3') {
+        panelTitle.textContent = "Caso 3: Sensibilidad CFL de Courant";
+        panelDesc.textContent = "Demuestra la física computacional detrás de la estabilidad numérica. Puedes variar C entre 0.80 (estable pero dispersivo), 1.00 (óptimo exacto) y 1.05 (inestabilidad y divergencia exponencial).";
+        state.T = 40.0;
+        state.mu = 0.002;
+        state.C = 1.05; // Poner en modo inestable para demostrar el concepto
+        state.A = 0.02;
+        state.x0 = 0.4;
+        state.sigma = 0.06;
+        state.pulsoTipo = 'gaussiano';
+        state.bcLeft = 'fijo';
+        state.bcRight = 'fijo';
+        document.getElementById('legend-analitica-box').style.display = 'flex';
+      } else if (esc === 'custom') {
+        panelTitle.textContent = "Caso 4: Modo Personalizado (Libre)";
+        panelDesc.textContent = "Control total sobre todos los parámetros de entrada físicos, mallado espacial, perfiles de deformación inicial y soportes de frontera.";
+      }
+
+      // Sincronizar inputs
+      rngT.value = state.T;
+      dispT.textContent = `${state.T.toFixed(1)} N`;
+      rngMu.value = (state.mu * 1e3).toFixed(1);
+      dispMu.textContent = `${(state.mu * 1e3).toFixed(1)} g/m`;
+      rngC.value = state.C;
+      dispC.textContent = state.C.toFixed(2);
+      rngA.value = Math.round(state.A * 1e3);
+      dispA.textContent = `${Math.round(state.A * 1e3)} mm`;
+      selPulso.value = state.pulsoTipo;
+      selBcLeft.value = state.bcLeft;
+      selBcRight.value = state.bcRight;
+
+      inicializarMalla();
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS
+    // =========================================================================
+
+    // Cambio de pestañas de escenario
+    document.querySelectorAll('.scenario-pill').forEach(btn => {
+      btn.addEventListener('click', () => cargarEscenario(btn.dataset.scenario));
+    });
+
+    // Botones de reproducción
+    btnPlay.addEventListener('click', () => {
+      state.corriendo = !state.corriendo;
+      labelPlay.textContent = state.corriendo ? "Pausar" : "Reanudar";
+      iconPlay.innerHTML = state.corriendo 
+        ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+        : '<polygon points="5 3 19 12 5 21 5 3"/>';
+    });
+
+    btnStep.addEventListener('click', () => {
+      state.corriendo = false;
+      labelPlay.textContent = "Reanudar";
+      iconPlay.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+      avanzarPasoFDTD();
+      dibujar();
+    });
+
+    btnReset.addEventListener('click', () => {
+      inicializarMalla();
+      dibujar();
+    });
+
+    chkAnalitica.addEventListener('change', (e) => {
+      state.mostrarAnalitica = e.target.checked;
+    });
+
+    chkGrid.addEventListener('change', (e) => {
+      state.mostrarGrid = e.target.checked;
+    });
+
+    selSpeed.addEventListener('change', (e) => {
+      state.velocidadSim = parseFloat(e.target.value);
+    });
+
+    // Controles de sliders interactivos
+    rngT.addEventListener('input', (e) => {
+      state.T = parseFloat(e.target.value);
+      dispT.textContent = `${state.T.toFixed(1)} N`;
+      inicializarMalla();
+    });
+
+    rngMu.addEventListener('input', (e) => {
+      state.mu = parseFloat(e.target.value) / 1000.0;
+      dispMu.textContent = `${parseFloat(e.target.value).toFixed(1)} g/m`;
+      inicializarMalla();
+    });
+
+    rngC.addEventListener('input', (e) => {
+      state.C = parseFloat(e.target.value);
+      dispC.textContent = state.C.toFixed(2);
+      inicializarMalla();
+    });
+
+    rngA.addEventListener('input', (e) => {
+      state.A = parseFloat(e.target.value) / 1000.0;
+      dispA.textContent = `${e.target.value} mm`;
+      inicializarMalla();
+    });
+
+    selPulso.addEventListener('change', (e) => {
+      state.pulsoTipo = e.target.value;
+      inicializarMalla();
+    });
+
+    selBcLeft.addEventListener('change', (e) => {
+      state.bcLeft = e.target.value;
+      inicializarMalla();
+    });
+
+    selBcRight.addEventListener('change', (e) => {
+      state.bcRight = e.target.value;
+      inicializarMalla();
+    });
+
+    // Ajuste de resolución para pantallas Retina / alta densidad
+    function ajustarCanvasDPI() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = 380 * dpr;
+      ctx.scale(dpr, dpr);
+    }
+
+    window.addEventListener('resize', () => {
+      ajustarCanvasDPI();
+      dibujar();
+    });
+
+    // ARRANQUE
+    ajustarCanvasDPI();
+    cargarEscenario('1');
+    requestAnimationFrame(animLoop);
+  </script>
+</body>
+</html>
