@@ -629,6 +629,9 @@
           Extremos rígidamente fijos a la pared (Dirichlet: y=0). La onda sufre una inversión de fase de 180° (π rad) en cada reflexión.
         </p>
 
+        <!-- AVISO DE ESTADO DE BLOQUEO DE PARÁMETROS -->
+        <div id="aviso-bloqueo-escenario" style="display: none; background: rgba(66, 133, 244, 0.1); border: 1px solid rgba(66, 133, 244, 0.3); border-radius: var(--radius-sm); padding: 0.6rem 0.8rem; font-size: 0.78rem; color: var(--accent-cyan); margin-bottom: 1rem; line-height: 1.4;"></div>
+
         <!-- FORMULARIO DE CONTROLES -->
         <div id="controls-container">
           
@@ -1156,6 +1159,45 @@
       selPulso.value = state.pulsoTipo;
       selBcLeft.value = state.bcLeft;
       selBcRight.value = state.bcRight;
+
+      // GESTIÓN DE BLOQUEO DE PARÁMETROS SEGÚN EL ESCENARIO
+      const todosControles = [rngT, rngMu, rngC, rngA, selPulso, selBcLeft, selBcRight];
+      const avisoBloqueo = document.getElementById('aviso-bloqueo-escenario');
+
+      if (esc === 'custom') {
+        // En modo personalizado, todos los controles se desbloquean libremente
+        todosControles.forEach(c => {
+          c.disabled = false;
+          c.style.opacity = '1';
+          c.style.cursor = 'pointer';
+        });
+        if (avisoBloqueo) avisoBloqueo.style.display = 'none';
+      } else if (esc === '1' || esc === '2') {
+        // En los casos 1 y 2, los parámetros están fijados por el estándar del proyecto
+        todosControles.forEach(c => {
+          c.disabled = true;
+          c.style.opacity = '0.45';
+          c.style.cursor = 'not-allowed';
+        });
+        if (avisoBloqueo) {
+          avisoBloqueo.style.display = 'block';
+          avisoBloqueo.innerHTML = '<strong>Parámetros fijados:</strong> Este escenario evalúa el caso estándar del informe (T = 40 N, μ = 2 g/m, C = 1.0). Para experimentar con valores libres, selecciona <em>Caso 4: Modo Personalizado</em>.';
+        }
+      } else if (esc === '3') {
+        // En el caso 3, se bloquean las propiedades físicas pero se permite variar Courant (C)
+        todosControles.forEach(c => {
+          c.disabled = true;
+          c.style.opacity = '0.45';
+          c.style.cursor = 'not-allowed';
+        });
+        rngC.disabled = false;
+        rngC.style.opacity = '1';
+        rngC.style.cursor = 'pointer';
+        if (avisoBloqueo) {
+          avisoBloqueo.style.display = 'block';
+          avisoBloqueo.innerHTML = '<strong>Análisis de Sensibilidad:</strong> Los parámetros físicos están bloqueados. Puedes variar únicamente el <strong>Número de Courant (CFL)</strong> para analizar dispersión e inestabilidad (0.80, 1.00, 1.05).';
+        }
+      }
 
       inicializarMalla();
     }
