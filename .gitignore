@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 .vscode/
 .idea/
+
+presentacion_diapositivas.html
+informe_completo_proyecto_10.md
+informe_imprimible_renderizado.html
