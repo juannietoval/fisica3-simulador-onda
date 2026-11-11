@@ -683,8 +683,9 @@
               <span>Extremo Izquierdo (x = 0)</span>
             </div>
             <select id="sel-bc-left">
-              <option value="fijo" selected>Fijo (y = 0)</option>
-              <option value="libre">Libre (dy/dx = 0)</option>
+              <option value="fijo" selected>Fijo (Pared y = 0)</option>
+              <option value="libre">Libre (Anillo dy/dx = 0)</option>
+              <option value="abierto">Sin Extremo (Ventana abierta / PhET)</option>
             </select>
           </div>
 
@@ -693,8 +694,9 @@
               <span>Extremo Derecho (x = L)</span>
             </div>
             <select id="sel-bc-right">
-              <option value="fijo" selected>Fijo (y = 0)</option>
-              <option value="libre">Libre (dy/dx = 0)</option>
+              <option value="fijo" selected>Fijo (Pared y = 0)</option>
+              <option value="libre">Libre (Anillo dy/dx = 0)</option>
+              <option value="abierto">Sin Extremo (Ventana abierta / PhET)</option>
             </select>
           </div>
 
@@ -842,7 +844,25 @@
       for (let i = 1; i < state.Nx - 1; i++) {
         state.y_sig[i] = (1.0 - C2) * state.y_act[i] + 0.5 * C2 * (state.y_act[i + 1] + state.y_act[i - 1]);
       }
-      aplicarFronteras(state.y_sig);
+      
+      // Aplicar fronteras en n = 1
+      if (state.bcLeft === 'fijo') {
+        state.y_sig[0] = 0.0;
+      } else if (state.bcLeft === 'libre') {
+        state.y_sig[0] = state.y_sig[1];
+      } else if (state.bcLeft === 'abierto') {
+        const factor = (state.C - 1.0) / (state.C + 1.0);
+        state.y_sig[0] = state.y_act[1] + factor * (state.y_sig[1] - state.y_act[0]);
+      }
+
+      if (state.bcRight === 'fijo') {
+        state.y_sig[state.Nx - 1] = 0.0;
+      } else if (state.bcRight === 'libre') {
+        state.y_sig[state.Nx - 1] = state.y_sig[state.Nx - 2];
+      } else if (state.bcRight === 'abierto') {
+        const factor = (state.C - 1.0) / (state.C + 1.0);
+        state.y_sig[state.Nx - 1] = state.y_act[state.Nx - 2] + factor * (state.y_sig[state.Nx - 2] - state.y_act[state.Nx - 1]);
+      }
 
       // Guardar copia del primer paso en y_ant para avanzar ordenadamente
       state.y_ant.set(state.y_act);
@@ -857,15 +877,17 @@
     function aplicarFronteras(vec) {
       if (state.bcLeft === 'fijo') {
         vec[0] = 0.0;
-      } else {
+      } else if (state.bcLeft === 'libre') {
         vec[0] = vec[1];
       }
+      // En 'abierto' (PhET / Mur), se preserva la condición inicial natural del perfil
 
       if (state.bcRight === 'fijo') {
         vec[state.Nx - 1] = 0.0;
-      } else {
+      } else if (state.bcRight === 'libre') {
         vec[state.Nx - 1] = vec[state.Nx - 2];
       }
+      // En 'abierto' (PhET / Mur), se preserva la condición inicial natural del perfil
     }
 
     // =========================================================================
@@ -884,7 +906,27 @@
         sig[i] = 2.0 * (1.0 - C2) * act[i] - ant[i] + C2 * (act[i + 1] + act[i - 1]);
       }
 
-      aplicarFronteras(sig);
+      // Condición de frontera izquierda x = 0
+      if (state.bcLeft === 'fijo') {
+        sig[0] = 0.0;
+      } else if (state.bcLeft === 'libre') {
+        sig[0] = sig[1];
+      } else if (state.bcLeft === 'abierto') {
+        // Condición de frontera absorbente de Mur (1er orden / estilo PhET sin extremo)
+        const factor = (state.C - 1.0) / (state.C + 1.0);
+        sig[0] = act[1] + factor * (sig[1] - act[0]);
+      }
+
+      // Condición de frontera derecha x = L
+      if (state.bcRight === 'fijo') {
+        sig[Nx - 1] = 0.0;
+      } else if (state.bcRight === 'libre') {
+        sig[Nx - 1] = sig[Nx - 2];
+      } else if (state.bcRight === 'abierto') {
+        // Condición de frontera absorbente de Mur (1er orden / estilo PhET sin extremo)
+        const factor = (state.C - 1.0) / (state.C + 1.0);
+        sig[Nx - 1] = act[Nx - 2] + factor * (sig[Nx - 2] - act[Nx - 1]);
+      }
 
       // Rotación de arreglos en memoria (sin nuevas reservas)
       ant.set(act);
@@ -1054,12 +1096,67 @@
 
         ctx.font = "bold 11px sans-serif";
         ctx.fillText("Pared Fija (y=0)", xIzq - 16, midY + 80);
-      } else {
-        ctx.strokeStyle = "#10b981";
-        ctx.lineWidth = 4;
+      } else if (state.bcLeft === 'libre') {
+        // Varilla vertical con anillo deslizante libre
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.9)";
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(xIzq, yIzq, 8, 0, Math.PI * 2);
+        ctx.moveTo(xIzq, midY - 90);
+        ctx.lineTo(xIzq, midY + 90);
         ctx.stroke();
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillRect(xIzq - 9, midY - 94, 18, 5);
+        ctx.fillRect(xIzq - 9, midY + 90, 18, 5);
+
+        ctx.strokeStyle = "#10b981";
+        ctx.lineWidth = 3.5;
+        ctx.fillStyle = "#060709";
+        ctx.beginPath();
+        ctx.arc(xIzq, yIzq, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#10b981";
+        ctx.beginPath();
+        ctx.arc(xIzq, yIzq, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("Anillo Libre (dy/dx=0)", xIzq - 50, midY + 110);
+      } else if (state.bcLeft === 'abierto') {
+        // Ventana abierta estilo PhET "Sin Extremo"
+        ctx.fillStyle = "rgba(100, 116, 139, 0.5)";
+        ctx.strokeStyle = "#64748b";
+        ctx.lineWidth = 2.5;
+
+        // Pared superior e inferior con hueco central de 80px
+        ctx.strokeRect(xIzq - 14, midY - 80, 14, 45);
+        ctx.fillRect(xIzq - 14, midY - 80, 14, 45);
+        ctx.strokeRect(xIzq - 14, midY + 35, 14, 45);
+        ctx.fillRect(xIzq - 14, midY + 35, 14, 45);
+
+        // Prolongación libre de la cuerda hacia el exterior sin rebote
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xIzq, yIzq);
+        ctx.lineTo(xIzq - 40, yIzq);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#38bdf8";
+        ctx.beginPath();
+        ctx.arc(xIzq, yIzq, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("Sin Extremo (PhET)", xIzq - 55, midY + 95);
+        ctx.fillStyle = "rgba(148, 163, 184, 0.8)";
+        ctx.font = "9px sans-serif";
+        ctx.fillText("Ventana / Absorción Mur", xIzq - 55, midY + 110);
       }
 
       // --- EXTREMO DERECHO (x = L) ---
@@ -1081,7 +1178,7 @@
 
         ctx.font = "bold 11px sans-serif";
         ctx.fillText("Pared Fija (y=0)", xDer - 35, midY + 80);
-      } else {
+      } else if (state.bcRight === 'libre') {
         // Varilla vertical metálica bien visible
         ctx.strokeStyle = "rgba(148, 163, 184, 0.9)";
         ctx.lineWidth = 5;
@@ -1111,6 +1208,39 @@
 
         ctx.font = "bold 11px sans-serif";
         ctx.fillText("Anillo Libre (dy/dx=0)", xDer - 55, midY + 110);
+      } else if (state.bcRight === 'abierto') {
+        // Ventana abierta estilo PhET "Sin Extremo"
+        ctx.fillStyle = "rgba(100, 116, 139, 0.5)";
+        ctx.strokeStyle = "#64748b";
+        ctx.lineWidth = 2.5;
+
+        // Pared superior e inferior con hueco central de 80px
+        ctx.strokeRect(xDer, midY - 80, 14, 45);
+        ctx.fillRect(xDer, midY - 80, 14, 45);
+        ctx.strokeRect(xDer, midY + 35, 14, 45);
+        ctx.fillRect(xDer, midY + 35, 14, 45);
+
+        // Prolongación libre de la cuerda hacia el exterior sin rebote (viaje a través de la ventana)
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xDer, yDer);
+        ctx.lineTo(xDer + 40, yDer);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#38bdf8";
+        ctx.beginPath();
+        ctx.arc(xDer, yDer, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("Sin Extremo (PhET)", xDer - 45, midY + 95);
+        ctx.fillStyle = "rgba(148, 163, 184, 0.8)";
+        ctx.font = "9px sans-serif";
+        ctx.fillText("Ventana / Absorción Mur", xDer - 45, midY + 110);
       }
 
       // 6. ACTUALIZACIÓN DE TELEMETRÍA

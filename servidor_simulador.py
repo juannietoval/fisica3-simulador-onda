@@ -58,26 +58,37 @@ def resolver_fdtd_en_memoria(params):
     bc_izq = params.get("bc_izq", "fijo")
     bc_der = params.get("bc_der", "fijo")
 
-    def aplicar_fronteras(vec):
-        if bc_izq == "fijo":
-            vec[0] = 0.0
-        else:
-            vec[0] = vec[1]  # Extremo libre (Neumann)
-
-        if bc_der == "fijo":
-            vec[-1] = 0.0
-        else:
-            vec[-1] = vec[-2]  # Extremo libre (Neumann)
-        return vec
-
     # Paso 0: t = 0
     Y = np.zeros((Nt, Nx))
-    Y[0, :] = aplicar_fronteras(y0.copy())
+    Y[0, :] = y0.copy()
+    if bc_izq == "fijo":
+        Y[0, 0] = 0.0
+    elif bc_izq == "libre":
+        Y[0, 0] = Y[0, 1]
+    if bc_der == "fijo":
+        Y[0, -1] = 0.0
+    elif bc_der == "libre":
+        Y[0, -1] = Y[0, -2]
 
     # Paso 1: n = 1 (arranque analítico para velocidad inicial cero)
     C2 = C ** 2
     Y[1, 1:-1] = (1.0 - C2) * Y[0, 1:-1] + 0.5 * C2 * (Y[0, 2:] + Y[0, :-2])
-    Y[1, :] = aplicar_fronteras(Y[1, :])
+    
+    # Fronteras en n = 1
+    factor_mur = (C - 1.0) / (C + 1.0)
+    if bc_izq == "fijo":
+        Y[1, 0] = 0.0
+    elif bc_izq == "libre":
+        Y[1, 0] = Y[1, 1]
+    elif bc_izq == "abierto":
+        Y[1, 0] = Y[0, 1] + factor_mur * (Y[1, 1] - Y[0, 0])
+
+    if bc_der == "fijo":
+        Y[1, -1] = 0.0
+    elif bc_der == "libre":
+        Y[1, -1] = Y[1, -2]
+    elif bc_der == "abierto":
+        Y[1, -1] = Y[0, -2] + factor_mur * (Y[1, -2] - Y[0, -1])
 
     # Bucle temporal iterativo FDTD de segundo orden
     for n in range(1, Nt - 1):
@@ -86,7 +97,22 @@ def resolver_fdtd_en_memoria(params):
             - Y[n - 1, 1:-1]
             + C2 * (Y[n, 2:] + Y[n, :-2])
         )
-        Y[n + 1, :] = aplicar_fronteras(Y[n + 1, :])
+        
+        # Frontera Izquierda (x = 0)
+        if bc_izq == "fijo":
+            Y[n + 1, 0] = 0.0
+        elif bc_izq == "libre":
+            Y[n + 1, 0] = Y[n + 1, 1]
+        elif bc_izq == "abierto":
+            Y[n + 1, 0] = Y[n, 1] + factor_mur * (Y[n + 1, 1] - Y[n, 0])
+
+        # Frontera Derecha (x = L)
+        if bc_der == "fijo":
+            Y[n + 1, -1] = 0.0
+        elif bc_der == "libre":
+            Y[n + 1, -1] = Y[n + 1, -2]
+        elif bc_der == "abierto":
+            Y[n + 1, -1] = Y[n, -2] + factor_mur * (Y[n + 1, -2] - Y[n, -1])
 
     # 5. Validación analítica con d'Alembert
     idx_val = min(int(Nt * 0.45), Nt - 1)
