@@ -6,3 +6,6 @@ __pycache__/
 presentacion_diapositivas.html
 informe_completo_proyecto_10.md
 informe_imprimible_renderizado.html
+
+generar_presentacion_pptx.py
+presentacion_ingenieria_proyecto_10.pptx
