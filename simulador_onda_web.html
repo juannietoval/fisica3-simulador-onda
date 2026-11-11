@@ -929,18 +929,20 @@
     // =========================================================================
 
     function dibujar() {
-      const w = canvas.width;
-      const h = canvas.height;
+      const rect = canvas.getBoundingClientRect();
+      const w = Math.floor(rect.width) || 900;
+      const h = 380;
       ctx.clearRect(0, 0, w, h);
 
-      const paddingX = 50;
-      const paddingY = 40;
+      // Márgenes laterales generosos para que ambos extremos queden 100% dentro
+      const paddingX = 80;
+      const paddingY = 45;
       const plotW = w - 2 * paddingX;
       const plotH = h - 2 * paddingY;
       const midY = paddingY + plotH / 2;
 
-      // Escala vertical: ±35 mm mapeados a la altura
-      const maxDisplMm = 35.0;
+      // Escala vertical: ±45 mm
+      const maxDisplMm = 45.0;
       const scaleY = (plotH / 2) / (maxDisplMm * 1e-3);
 
       // 1. MALLA DE FONDO
@@ -1032,16 +1034,84 @@
       ctx.stroke();
       ctx.shadowBlur = 0; // Restaurar sombra
 
-      // 5. MARCADORES DE FRONTERA EN LOS EXTREMOS
-      ctx.fillStyle = state.bcLeft === 'fijo' ? "#f43f5e" : "#10b981";
-      ctx.beginPath();
-      ctx.arc(paddingX, midY - state.y_act[0] * scaleY, 6, 0, Math.PI * 2);
-      ctx.fill();
+      // 5. SOPORTES MECÁNICOS Y MARCADORES EN AMBOS EXTREMOS
+      // --- EXTREMO IZQUIERDO (x = 0) ---
+      const xIzq = paddingX;
+      const yIzq = midY - state.y_act[0] * scaleY;
 
-      ctx.fillStyle = state.bcRight === 'fijo' ? "#f43f5e" : "#10b981";
-      ctx.beginPath();
-      ctx.arc(paddingX + plotW, midY - state.y_act[state.Nx - 1] * scaleY, 6, 0, Math.PI * 2);
-      ctx.fill();
+      if (state.bcLeft === 'fijo') {
+        // Bloque de fijación rígida con rayado
+        ctx.fillStyle = "rgba(244, 63, 94, 0.3)";
+        ctx.strokeStyle = "#f43f5e";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(xIzq - 16, midY - 60, 16, 120);
+        ctx.fillRect(xIzq - 16, midY - 60, 16, 120);
+
+        ctx.fillStyle = "#f43f5e";
+        ctx.beginPath();
+        ctx.arc(xIzq, yIzq, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("Pared Fija (y=0)", xIzq - 16, midY + 80);
+      } else {
+        ctx.strokeStyle = "#10b981";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(xIzq, yIzq, 8, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // --- EXTREMO DERECHO (x = L) ---
+      const xDer = paddingX + plotW;
+      const yDer = midY - state.y_act[state.Nx - 1] * scaleY;
+
+      if (state.bcRight === 'fijo') {
+        // Bloque de fijación rígida en la pared derecha
+        ctx.fillStyle = "rgba(244, 63, 94, 0.3)";
+        ctx.strokeStyle = "#f43f5e";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(xDer, midY - 60, 16, 120);
+        ctx.fillRect(xDer, midY - 60, 16, 120);
+
+        ctx.fillStyle = "#f43f5e";
+        ctx.beginPath();
+        ctx.arc(xDer, yDer, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("Pared Fija (y=0)", xDer - 35, midY + 80);
+      } else {
+        // Varilla vertical metálica bien visible
+        ctx.strokeStyle = "rgba(148, 163, 184, 0.9)";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(xDer, midY - 90);
+        ctx.lineTo(xDer, midY + 90);
+        ctx.stroke();
+
+        // Topes de la varilla
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillRect(xDer - 9, midY - 94, 18, 5);
+        ctx.fillRect(xDer - 9, midY + 90, 18, 5);
+
+        // Anillo verde brillante que sube y baja en la varilla
+        ctx.strokeStyle = "#10b981";
+        ctx.lineWidth = 3.5;
+        ctx.fillStyle = "#060709";
+        ctx.beginPath();
+        ctx.arc(xDer, yDer, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#10b981";
+        ctx.beginPath();
+        ctx.arc(xDer, yDer, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("Anillo Libre (dy/dx=0)", xDer - 55, midY + 110);
+      }
 
       // 6. ACTUALIZACIÓN DE TELEMETRÍA
       if (tieneAnalitica) {
@@ -1289,9 +1359,15 @@
     function ajustarCanvasDPI() {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = 380 * dpr;
-      ctx.scale(dpr, dpr);
+      const logicalWidth = Math.floor(rect.width) || 900;
+      const logicalHeight = 380;
+
+      canvas.width = Math.round(logicalWidth * dpr);
+      canvas.height = Math.round(logicalHeight * dpr);
+      canvas.style.width = `${logicalWidth}px`;
+      canvas.style.height = `${logicalHeight}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     window.addEventListener('resize', () => {
