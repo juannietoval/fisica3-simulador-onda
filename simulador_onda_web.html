@@ -483,6 +483,87 @@
       background: transparent;
     }
 
+    /* ESTILOS DE LA PESTAÑA DE GALERÍA DE GRÁFICAS CIENTÍFICAS */
+    .vista-graficas-container {
+      display: none;
+      flex-direction: column;
+      gap: 2rem;
+      width: 100%;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .vista-graficas-container.active {
+      display: flex;
+    }
+
+    .vista-simulador-container {
+      display: grid;
+    }
+
+    .vista-simulador-container.hidden {
+      display: none !important;
+    }
+
+    .grafica-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .grafica-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+    }
+
+    .grafica-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .grafica-badge {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      font-weight: 600;
+    }
+
+    .grafica-img-wrap {
+      width: 100%;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+
+    .grafica-img-wrap img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .grafica-caption {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      padding: 0.5rem 0.2rem 0;
+    }
+
+    .grafica-caption strong {
+      color: var(--accent-cyan);
+    }
+
     /* FOOTER */
     footer {
       padding: 1.5rem 2rem;
@@ -535,10 +616,14 @@
         <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
         Caso 4: Modo Personalizado
       </button>
+      <button class="scenario-pill" data-scenario="graficas" style="border-color: rgba(56, 189, 248, 0.45); color: var(--accent-cyan);">
+        <svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2"/><line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2"/></svg>
+        Galería de Perfiles Científicos
+      </button>
     </nav>
 
     <!-- GRID PRINCIPAL DE VISUALIZACIÓN Y CONFIGURACIÓN -->
-    <div class="grid-dashboard">
+    <div class="grid-dashboard vista-simulador-container" id="contenedor-simulador">
       
       <!-- COLUMNA IZQUIERDA: CANVAS Y TELEMETRÍA -->
       <div class="glass-card">
@@ -711,6 +796,81 @@
           <strong>Criterio CFL Satisfecho (C ≤ 1.0):</strong> El algoritmo numérico es incondicionalmente estable.
         </div>
 
+      </div>
+
+    </div>
+
+    <!-- PESTAÑA: GALERÍA DE PERFILES DE ONDAS CIENTÍFICOS -->
+    <div class="vista-graficas-container" id="contenedor-graficas">
+      
+      <!-- TARJETA 1: CASO 1 PERFILES FIJOS -->
+      <div class="grafica-card">
+        <div class="grafica-header">
+          <div class="grafica-title">Caso 1: Evolución Temporal y Reflexión Invertida en Paredes Fijas (Dirichlet)</div>
+          <span class="grafica-badge">Perfiles de Onda u(x, t)</span>
+        </div>
+        <div class="grafica-img-wrap">
+          <img src="resultados_graficas/escenario1_perfiles_fijos.png" alt="Perfiles temporales con extremos fijos" loading="lazy">
+        </div>
+        <div class="grafica-caption">
+          <strong>Interpretación física:</strong> El pulso inicial se separa en dos semipulsos de 10 mm viajando en sentidos contrarios a 141.42 m/s. Al chocar contra las paredes rígidas, la fuerza de reacción invierte su fase 180° convirtiéndolas en crestas negativas.
+        </div>
+      </div>
+
+      <!-- TARJETA 2: CASO 2 PERFILES LIBRES -->
+      <div class="grafica-card">
+        <div class="grafica-header">
+          <div class="grafica-title">Caso 2: Evolución Temporal con Extremo Derecho Libre (Neumann)</div>
+          <span class="grafica-badge">Perfiles de Onda u(x, t)</span>
+        </div>
+        <div class="grafica-img-wrap">
+          <img src="resultados_graficas/escenario2_perfiles_libre.png" alt="Perfiles temporales con extremo libre" loading="lazy">
+        </div>
+        <div class="grafica-caption">
+          <strong>Interpretación física:</strong> En la pared izquierda (x = 0) la onda se invierte (-180°), mientras que en el anillo deslizante derecho (x = 1.0 m) la onda rebota en la misma fase sin invertirse, alcanzando el doble de amplitud en el borde.
+        </div>
+      </div>
+
+      <!-- TARJETA 3: CASO 3 SENSIBILIDAD CFL -->
+      <div class="grafica-card">
+        <div class="grafica-header">
+          <div class="grafica-title">Caso 3: Sensibilidad del Parámetro de Courant CFL (C = 0.80, 1.00, 1.05)</div>
+          <span class="grafica-badge">Análisis de Estabilidad</span>
+        </div>
+        <div class="grafica-img-wrap">
+          <img src="resultados_graficas/escenario3_sensibilidad_cfl.png" alt="Sensibilidad CFL Courant" loading="lazy">
+        </div>
+        <div class="grafica-caption">
+          <strong>Interpretación física:</strong> Para C = 1.00 la propagación numérica es exacta y libre de dispersión; para C = 0.80 surgen oscilaciones espurias de alta frecuencia; y para C = 1.05 se desata una divergencia exponencial inestable.
+        </div>
+      </div>
+
+      <!-- TARJETA 4: VALIDACIÓN D'ALEMBERT -->
+      <div class="grafica-card">
+        <div class="grafica-header">
+          <div class="grafica-title">Validación Cuantitativa: FDTD Numérico vs Solución Analítica de d'Alembert</div>
+          <span class="grafica-badge">Verificación Teórica Exacta</span>
+        </div>
+        <div class="grafica-img-wrap">
+          <img src="resultados_graficas/validacion_analitica_dalembert.png" alt="Validación analítica d'Alembert" loading="lazy">
+        </div>
+        <div class="grafica-caption">
+          <strong>Interpretación física:</strong> Comparación directa de la curva FDTD (azul) contra la solución teórica de d'Alembert (roja discontinua), confirmando un Error Cuadrático Medio microscópico de apenas 1.59 × 10⁻⁵ mm (0.0003 %).
+        </div>
+      </div>
+
+      <!-- TARJETA 5: DIVERGENCIA EXPONENCIAL A ESCALA -->
+      <div class="grafica-card">
+        <div class="grafica-header">
+          <div class="grafica-title">Análisis de Crecimiento de Inestabilidad Numérica (C = 1.05)</div>
+          <span class="grafica-badge">Teorema de Von Neumann</span>
+        </div>
+        <div class="grafica-img-wrap">
+          <img src="resultados_graficas/crecimiento_inestabilidad_escala.png" alt="Crecimiento de inestabilidad exponencial" loading="lazy">
+        </div>
+        <div class="grafica-caption">
+          <strong>Interpretación física:</strong> Demostración experimental del colapso numérico por violación del cono de causalidad CFL: la amplitud crece geométricamente en potencias de 10 hasta desbordar la memoria en NaN en menos de 15 ms.
+        </div>
       </div>
 
     </div>
@@ -1333,6 +1493,24 @@
       document.querySelectorAll('.scenario-pill').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.scenario === esc);
       });
+
+      const contenedorSim = document.getElementById('contenedor-simulador');
+      const contenedorGraf = document.getElementById('contenedor-graficas');
+
+      // GESTIÓN DE PESTAÑA: GALERÍA DE GRÁFICAS CIENTÍFICAS
+      if (esc === 'graficas') {
+        panelTitle.textContent = "Galería Científica: Perfiles Espaciales de Onda u(x, t)";
+        panelDesc.textContent = "Estudio exhaustivo de los frentes de onda calculados en alta resolución: choques, inversiones de fase, estabilidad de Courant y contrastación contra d'Alembert.";
+        if (contenedorSim) contenedorSim.classList.add('hidden');
+        if (contenedorGraf) contenedorGraf.classList.add('active');
+        state.corriendo = false;
+        labelPlay.textContent = "Reanudar";
+        iconPlay.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        return;
+      } else {
+        if (contenedorSim) contenedorSim.classList.remove('hidden');
+        if (contenedorGraf) contenedorGraf.classList.remove('active');
+      }
 
       if (esc === '1') {
         panelTitle.textContent = "Caso 1: Extremos Fijos (Dirichlet)";
