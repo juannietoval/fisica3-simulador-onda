@@ -50,10 +50,23 @@ def resolver_fdtd_en_memoria(params):
         mask_der = x > x0
         y0[mask_izq] = A * (x[mask_izq] / x0)
         y0[mask_der] = A * ((L - x[mask_der]) / (L - x0))
+    elif tipo_pulso == "cuadrado":
+        ancho = sigma * 1.5
+        y0[np.abs(x - x0) <= ancho] = A
+    elif tipo_pulso == "semisinusoidal":
+        ancho = sigma * 2.0
+        mask = np.abs(x - x0) <= ancho
+        y0[mask] = A * np.cos((np.pi / (2.0 * ancho)) * (x[mask] - x0))
+    elif tipo_pulso == "armonico":
+        k = 4.0 * np.pi / L
+        y0 = A * np.sin(k * x) * np.exp(-((x - x0) ** 2) / (2.0 * ((sigma * 2.0) ** 2)))
     elif tipo_pulso == "dos_pulsos":
         # Superposición de dos pulsos colisionantes
         y0 = (A * np.exp(-((x - 0.25 * L) ** 2) / (2.0 * (sigma ** 2))) +
               A * np.exp(-((x - 0.75 * L) ** 2) / (2.0 * (sigma ** 2))))
+    elif tipo_pulso == "estacionaria":
+        # Modo estacionario fundamental puro n = 1
+        y0 = A * np.sin(np.pi * x / L)
 
     bc_izq = params.get("bc_izq", "fijo")
     bc_der = params.get("bc_der", "fijo")

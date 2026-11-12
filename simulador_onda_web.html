@@ -666,7 +666,11 @@
             <select id="sel-pulso">
               <option value="gaussiano" selected>Pulso Gaussiano Suave</option>
               <option value="triangular">Pulso Triangular (Cuerda Pulsada)</option>
+              <option value="cuadrado">Pulso Cuadrado / Escalón</option>
+              <option value="semisinusoidal">Semionda Sinusoidal Suave</option>
               <option value="armonico">Paquete Armónico Senoidal</option>
+              <option value="dos_pulsos">Dos Pulsos Colisionantes</option>
+              <option value="estacionaria">Modo Estacionario Fundamental (n=1)</option>
             </select>
           </div>
 
@@ -821,16 +825,43 @@
         let yi = 0.0;
 
         if (state.pulsoTipo === 'gaussiano') {
+          // 1. Gaussiana estándar suave
           yi = state.A * Math.exp(-Math.pow(xi - state.x0, 2) / (2.0 * Math.pow(state.sigma, 2)));
         } else if (state.pulsoTipo === 'triangular') {
+          // 2. Triangular (cuerda pulsada o pellizcada en x0)
           if (xi <= state.x0) {
             yi = state.A * (xi / state.x0);
           } else {
             yi = state.A * ((state.L - xi) / (state.L - state.x0));
           }
+        } else if (state.pulsoTipo === 'cuadrado') {
+          // 3. Pulso cuadrado / rectangulo centrado en x0
+          const ancho = state.sigma * 1.5;
+          if (Math.abs(xi - state.x0) <= ancho) {
+            yi = state.A;
+          } else {
+            yi = 0.0;
+          }
+        } else if (state.pulsoTipo === 'semisinusoidal') {
+          // 4. Semionda sinusoidal de soporte compacto
+          const ancho = state.sigma * 2.0;
+          if (Math.abs(xi - state.x0) <= ancho) {
+            yi = state.A * Math.cos((Math.PI / (2.0 * ancho)) * (xi - state.x0));
+          } else {
+            yi = 0.0;
+          }
         } else if (state.pulsoTipo === 'armonico') {
+          // 5. Paquete armónico senoidal modulado por envolvente gaussiana
           const k = 4.0 * Math.PI / state.L;
           yi = state.A * Math.sin(k * xi) * Math.exp(-Math.pow(xi - state.x0, 2) / (2.0 * Math.pow(state.sigma * 2, 2)));
+        } else if (state.pulsoTipo === 'dos_pulsos') {
+          // 6. Superposición de dos pulsos gaussianos colisionantes en sentidos opuestos
+          const y1 = state.A * Math.exp(-Math.pow(xi - 0.25 * state.L, 2) / (2.0 * Math.pow(state.sigma, 2)));
+          const y2 = state.A * Math.exp(-Math.pow(xi - 0.75 * state.L, 2) / (2.0 * Math.pow(state.sigma, 2)));
+          yi = y1 + y2;
+        } else if (state.pulsoTipo === 'estacionaria') {
+          // 7. Modo armónico estacionario fundamental puro n = 1
+          yi = state.A * Math.sin(Math.PI * xi / state.L);
         }
 
         state.y_act[i] = yi;
