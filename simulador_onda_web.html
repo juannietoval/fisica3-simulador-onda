@@ -1392,8 +1392,14 @@
       selBcRight.value = state.bcRight;
 
       // GESTIÓN DE BLOQUEO DE PARÁMETROS SEGÚN EL ESCENARIO
-      const todosControles = [rngT, rngMu, rngC, rngA, selPulso, selBcLeft, selBcRight];
+      // Nota: El selector de función de entrada (selPulso) permanece SIEMPRE habilitado en todos los casos
+      const todosControles = [rngT, rngMu, rngC, rngA, selBcLeft, selBcRight];
       const avisoBloqueo = document.getElementById('aviso-bloqueo-escenario');
+
+      // Garantizar que la función de entrada (selPulso) siempre esté 100% activa e interactiva
+      selPulso.disabled = false;
+      selPulso.style.opacity = '1';
+      selPulso.style.cursor = 'pointer';
 
       if (esc === 'custom') {
         // En modo personalizado, todos los controles se desbloquean libremente
@@ -1404,7 +1410,7 @@
         });
         if (avisoBloqueo) avisoBloqueo.style.display = 'none';
       } else if (esc === '1' || esc === '2') {
-        // En los casos 1 y 2, los parámetros están fijados por el estándar del proyecto
+        // En los casos 1 y 2, los parámetros de cuerda y fronteras están fijados, pero el tipo de pulso es libre
         todosControles.forEach(c => {
           c.disabled = true;
           c.style.opacity = '0.45';
@@ -1412,10 +1418,10 @@
         });
         if (avisoBloqueo) {
           avisoBloqueo.style.display = 'block';
-          avisoBloqueo.innerHTML = '<strong>Parámetros fijados:</strong> Este escenario evalúa el caso estándar del informe (T = 40 N, μ = 2 g/m, C = 1.0). Para experimentar con valores libres, selecciona <em>Caso 4: Modo Personalizado</em>.';
+          avisoBloqueo.innerHTML = '<strong>Propiedades fijadas:</strong> Tensión, densidad y fronteras están bloqueadas por el protocolo del escenario, pero puedes <strong>cambiar libremente la función de onda inicial</strong>.';
         }
       } else if (esc === '3') {
-        // En el caso 3, se bloquean las propiedades físicas pero se permite variar Courant (C)
+        // En el caso 3, se bloquean tensión y masa pero se permite variar Courant (C) y el tipo de onda
         todosControles.forEach(c => {
           c.disabled = true;
           c.style.opacity = '0.45';
@@ -1426,7 +1432,7 @@
         rngC.style.cursor = 'pointer';
         if (avisoBloqueo) {
           avisoBloqueo.style.display = 'block';
-          avisoBloqueo.innerHTML = '<strong>Análisis de Sensibilidad:</strong> Los parámetros físicos están bloqueados. Puedes variar únicamente el <strong>Número de Courant (CFL)</strong> para analizar dispersión e inestabilidad (0.80, 1.00, 1.05).';
+          avisoBloqueo.innerHTML = '<strong>Análisis de Sensibilidad:</strong> Puedes variar libremente la <strong>función de onda inicial</strong> y el <strong>Número de Courant (CFL)</strong> para analizar dispersión e inestabilidad.';
         }
       }
 
